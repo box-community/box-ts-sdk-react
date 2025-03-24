@@ -20,6 +20,7 @@ import { generateReadableStreamFromFile } from '../node_modules/box-typescript-s
 function App() {
   const [items, setItems] = React.useState([]);
   const [client, setClient] = React.useState(null);
+  const [currentFolder, setCurrentFolder] = React.useState("0");
 
   const fileInputRef = React.useRef(null);
   const[uploading, setUploading] = React.useState(false);
@@ -42,6 +43,7 @@ function App() {
     }
     let entries = (await client.folders.getFolderItems(folderId)).entries;
     setItems(entries);
+    setCurrentFolder(folderId);
   };
 
   const handleUploadButtonClick = () => {
@@ -74,11 +76,11 @@ function App() {
             generateReadableStreamFromFile(file),
             file.name,
             file.size,
-            "0",
+            currentFolder,
           );
           console.log("Uploaded file : ",response);
           alert("File successfully uploaded");
-          getFiles("0");
+          getFiles(currentFolder);
         } catch(error) {
           console.error("Error object:", error);
           // More detailed error logging
@@ -107,7 +109,7 @@ function App() {
           // Prepare upload attributes
           const attributes = {
             name: file.name,
-            parent: { id: "0" } // Upload to the root folder
+            parent: { id: currentFolder }
           };
           // Upload using the SDK
           const uploadResponse = await client.uploads.uploadFile({
@@ -118,7 +120,7 @@ function App() {
           console.log("Uploaded file:", uploadedFile);
           alert(`Successfully uploaded ${file.name}`);
           // Refresh the file list after upload
-          getFiles("0");
+          getFiles(currentFolder);
   
         } catch (error) {
           
