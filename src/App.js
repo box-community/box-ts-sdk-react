@@ -12,15 +12,24 @@ import {
   TextField,
 } from "@mui/material";
 
+
 import { BoxClient, BoxDeveloperTokenAuth } from "box-typescript-sdk-gen";
+import { generateReadableStreamFromFile } from '../node_modules/box-typescript-sdk-gen/lib/internal/utilsBrowser.js'
+
 
 function App() {
   const [items, setItems] = React.useState([]);
   const [client, setClient] = React.useState(null);
 
+  const fileInputRef = React.useRef(null);
+  const[uploading, setUploading] = React.useState(false);
+
+ 
+
   let updateToken = (value) => {
     let auth = new BoxDeveloperTokenAuth({
       token: value.target.value,
+      
     });
     let boxClient = new BoxClient({ auth });
     setClient(boxClient);
@@ -35,6 +44,108 @@ function App() {
     setItems(entries);
   };
 
+  const handleUploadButtonClick = () => {
+    if (client === null) {
+      console.error("Error: Client is null");
+      alert("Please enter a developer token");
+      return;
+    }
+    fileInputRef.current.click();
+  }
+
+    const handleFileUpload = async (event) => {
+      if (client === null) {
+        console.error("Error: Client is null");
+        alert("Please enter a developer token");
+        return;
+      }
+      const file = event.target.files[0];
+      if (!file) {
+        console.error("Error: No file selected");
+        alert("Error: No file selected");
+        return;
+      }
+
+      //check if the file is too large [more than 20MB] then use the chunked upload method.
+      if (file.size > 20 * 1024 * 1024) {
+        setUploading(true);
+        try {
+          const response = await client.chunkedUploads.uploadBigFile(
+            generateReadableStreamFromFile(file),
+            file.name,
+            file.size,
+            "0",
+          );
+          console.log("Uploaded file : ",response);
+          alert("File successfully uploaded");
+          getFiles("0");
+        } catch(error) {
+          console.error("Error object:", error);
+          // More detailed error logging
+          if (error.response) {
+            console.error("Response error status:", error.response.status);
+            console.error("Response error data:", error.response.data);
+          }
+          // Log any error details specific to the Box SDK
+          if (error.statusCode) {
+            console.error("Box API status code:", error.statusCode);
+          }
+          if (error.request) {
+            console.error("Request details:", error.request);
+          }
+          if (error.message) {
+            console.error("Error message:", error.message);
+          }
+          alert(`Error uploading file: ${error.message || "Unknown error"}`);
+        }finally {
+          setUploading(false);
+        }
+      }
+      else {
+        setUploading(true);
+        try {
+          // Prepare upload attributes
+          const attributes = {
+            name: file.name,
+            parent: { id: "0" } // Upload to the root folder
+          };
+          // Upload using the SDK
+          const uploadResponse = await client.uploads.uploadFile({
+            attributes: attributes,
+            file: generateReadableStreamFromFile(file)
+          });
+          const uploadedFile = uploadResponse.entries[0];
+          console.log("Uploaded file:", uploadedFile);
+          alert(`Successfully uploaded ${file.name}`);
+          // Refresh the file list after upload
+          getFiles("0");
+  
+        } catch (error) {
+          
+          console.error("Error object:", error);
+          // More detailed error logging
+          if (error.response) {
+            console.error("Response error status:", error.response.status);
+            console.error("Response error data:", error.response.data);
+          }
+          // Log any error details specific to the Box SDK
+          if (error.statusCode) {
+            console.error("Box API status code:", error.statusCode);
+          }
+          if (error.request) {
+            console.error("Request details:", error.request);
+          }
+          if (error.message) {
+            console.error("Error message:", error.message);
+          }
+          
+          alert(`Error uploading file: ${error.message || "Unknown error"}`);
+        } finally {
+          setUploading(false);
+        }
+      }
+    };
+  
   let downloadFile = async (fileId) => {
     const fileInfo = await client.files.getFileById(fileId);
     const byteStream = await client.downloads.downloadFile(fileId);
@@ -64,7 +175,11 @@ function App() {
         <br />
         <Button variant="contained" onClick={() => getFiles("0")}>
           Get Root Folder
+        </Button>&nbsp;
+        <Button variant="contained" onClick={handleUploadButtonClick} disabled={uploading}>
+          {uploading ? "Uploading...":'Upload'}
         </Button>
+        <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload}></input>
       </header>
       <Paper>
         <TableContainer component={Paper}>
