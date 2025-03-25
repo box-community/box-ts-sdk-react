@@ -23,7 +23,7 @@ function App() {
   const [client, setClient] = React.useState(null);
   const [currentFolder, setCurrentFolder] = React.useState("0");
   const fileInputRef = React.useRef(null);
-  const[uploading, setUploading] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
 
   let updateToken = (value) => {
     let auth = new BoxDeveloperTokenAuth({
@@ -32,7 +32,7 @@ function App() {
     let boxClient = new BoxClient({ auth });
     setClient(boxClient);
   };
-  
+
   let getFiles = async (folderId) => {
     if (client === null) {
       alert("Please enter a developer token");
@@ -49,13 +49,13 @@ function App() {
       return;
     }
     fileInputRef.current.click();
-  }
-  
+  };
+
   const handleFileUpload = async (event) => {
     if (client === null) {
       alert("Please enter a developer token");
-       return;
-      }
+      return;
+    }
     const file = event.target.files[0];
     if (!file) {
       alert("Error: No file selected");
@@ -67,60 +67,47 @@ function App() {
       setUploading(true);
       try {
         const response = await client.chunkedUploads.uploadBigFile(
-        generateReadableStreamFromFile(file),
-        file.name,
-        file.size,
-        currentFolder,
-      );
-      console.log("Uploaded file : ",response);
-      alert("File successfully uploaded");
-      getFiles(currentFolder);
-    } catch (error) {
-      console.error("Error uploading file:", {
-        message: error.message,
-        statusCode: error.statusCode,
-        responseStatus: error.response?.status,
-        responseData: error.response?.data,
-        requestDetails: error.request,
-      });
-      alert(`Error uploading file: ${error.message || "Unknown error"}`);
-    } finally {
-      setUploading(false);
-    }
-  }
-    else {
+          generateReadableStreamFromFile(file),
+          file.name,
+          file.size,
+          currentFolder
+        );
+        console.log("Uploaded file : ", response);
+        alert("File successfully uploaded");
+        getFiles(currentFolder);
+      } catch (error) {
+        console.error("Error uploading file: ", error);
+        alert(`Error uploading file: ${error.message || "Unknown error"}`);
+      } finally {
+        setUploading(false);
+      }
+    } else {
       setUploading(true);
       try {
         // Prepare upload attributes
         const attributes = {
-        name: file.name,
-        parent: { id: currentFolder }
+          name: file.name,
+          parent: { id: currentFolder },
         };
         // Upload using the SDK
         const uploadResponse = await client.uploads.uploadFile({
-        attributes: attributes,
-        file: generateReadableStreamFromFile(file)
+          attributes: attributes,
+          file: generateReadableStreamFromFile(file),
         });
         const uploadedFile = uploadResponse.entries[0];
         console.log("Uploaded file:", uploadedFile);
-        alert(`Successfully uploaded ${file.name}`);
-          // Refresh the file list after upload
-          getFiles(currentFolder);
-        } catch (error) {
-          console.error("Error uploading file:", {
-          message: error.message,
-          statusCode: error.statusCode,
-          responseStatus: error.response?.status,
-          responseData: error.response?.data,
-          requestDetails: error.request,
-        });
+        alert("File successfully uploaded");
+        // Refresh the file list after upload
+        getFiles(currentFolder);
+      } catch (error) {
+        console.error("Error uploading file: ", error);
         alert(`Error uploading file: ${error.message || "Unknown error"}`);
       } finally {
-          setUploading(false);
-        }
+        setUploading(false);
       }
-    };
-  
+    }
+  };
+
   let downloadFile = async (fileId) => {
     const fileInfo = await client.files.getFileById(fileId);
     const byteStream = await client.downloads.downloadFile(fileId);
@@ -154,7 +141,11 @@ function App() {
           />
         </Box>
         <Box display="flex" justifyContent="center" mb={2}>
-          <Button variant="contained" size="small" onClick={() => getFiles("0")}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => getFiles("0")}
+          >
             Get Root Folder
           </Button>
           &nbsp;
@@ -196,7 +187,7 @@ function App() {
                       <Button
                         variant="contained"
                         color="primary"
-                        size = "small"
+                        size="small"
                         onClick={() => downloadFile(item.id)}
                       >
                         Download
