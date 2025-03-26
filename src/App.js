@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 
 import { BoxClient, BoxDeveloperTokenAuth } from "box-typescript-sdk-gen";
-import { generateReadableStreamFromFile } from "box-typescript-sdk-gen/lib/internal/utilsBrowser.js";
+import { generateReadableStreamFromFile } from "box-typescript-sdk-gen/lib/internal/utils.js";
 
 function App() {
   const [items, setItems] = React.useState([]);
@@ -73,7 +73,7 @@ function App() {
           currentFolder
         );
         console.log("Uploaded file : ", response);
-        alert("File successfully uploaded");
+        alert(`File successfully uploaded ${file.name}`);
         getFiles(currentFolder);
       } catch (error) {
         console.error("Error uploading file: ", error);
@@ -96,7 +96,7 @@ function App() {
         });
         const uploadedFile = uploadResponse.entries[0];
         console.log("Uploaded file:", uploadedFile);
-        alert("File successfully uploaded");
+        alert(`File successfully uploaded ${file.name}`);
         // Refresh the file list after upload
         getFiles(currentFolder);
       } catch (error) {
