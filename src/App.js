@@ -73,7 +73,7 @@ function App() {
           currentFolder
         );
         console.log("Uploaded file : ", response);
-        alert(`File successfully uploaded ${file.name}`);
+        alert(`File successfully uploaded ${response.name}`);
         getFiles(currentFolder);
       } catch (error) {
         console.error("Error uploading file: ", error);
@@ -90,13 +90,13 @@ function App() {
           parent: { id: currentFolder },
         };
         // Upload using the SDK
-        const uploadResponse = await client.uploads.uploadFile({
+        const response = await client.uploads.uploadFile({
           attributes: attributes,
           file: generateReadableStreamFromFile(file),
         });
-        const uploadedFile = uploadResponse.entries[0];
-        console.log("Uploaded file:", uploadedFile);
-        alert(`File successfully uploaded ${file.name}`);
+        const uploadedFile = response.entries[0];
+        console.log("Uploaded file :", uploadedFile);
+        alert(`File successfully uploaded ${uploadedFile.name}`);
         // Refresh the file list after upload
         getFiles(currentFolder);
       } catch (error) {
