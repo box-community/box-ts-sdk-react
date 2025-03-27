@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/box-ts-sdk-react/static/css/main.e8adb081.css",
+    "main.js": "/box-ts-sdk-react/static/js/main.2f7d1cd9.js",
+    "index.html": "/box-ts-sdk-react/index.html",
+    "main.e8adb081.css.map": "/box-ts-sdk-react/static/css/main.e8adb081.css.map",
+    "main.2f7d1cd9.js.map": "/box-ts-sdk-react/static/js/main.2f7d1cd9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e8adb081.css",
+    "static/js/main.2f7d1cd9.js"
+  ]
+}
