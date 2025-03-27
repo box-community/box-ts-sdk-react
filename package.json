@@ -1,6 +1,7 @@
 {
   "name": "box-ui",
   "version": "0.1.0",
+  "homepage": "https://box-community.github.io/box-ts-sdk-react",
   "private": true,
   "dependencies": {
     "@mui/material": "^5.14.8",
@@ -10,8 +11,8 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "cross-env GENERATE_SOURCEMAP=false react-scripts start",
-    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
+    "start": "react-scripts start",
+    "build": "react-scripts build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -31,8 +32,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
   }
 }
