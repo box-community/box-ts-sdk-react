@@ -22,7 +22,9 @@ jobs:
 
       # Step 3: Install dependencies
       - name: Install Dependencies
-        run: npm install && npm install gh-pages --save-dev
+        run: |
+          npm install
+          npm install gh-pages --save-dev
 
       # Step 4: Build the React app
       - name: Build React App
