@@ -17,6 +17,7 @@ Read a step-by-step guide on how to build this app in this [Medium article]().
 3. Create Box custom app.
 4. Choose any authentication method (could be JWT or OAuth2 or CCG).
 5. Go to the Configuration tab and get the Developer Token.
+6. Ensure CORS is configured to allow requests from http://localhost:3000 in your Box App settings.
 
 ### Run the example app
 

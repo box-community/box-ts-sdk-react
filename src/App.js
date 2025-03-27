@@ -10,13 +10,20 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
+  Box,
+  CircularProgress,
 } from "@mui/material";
 
 import { BoxClient, BoxDeveloperTokenAuth } from "box-typescript-sdk-gen";
+import { generateReadableStreamFromFile } from "box-typescript-sdk-gen/lib/internal/utils.js";
 
 function App() {
   const [items, setItems] = React.useState([]);
   const [client, setClient] = React.useState(null);
+  const [currentFolder, setCurrentFolder] = React.useState("0");
+  const fileInputRef = React.useRef(null);
+  const [uploading, setUploading] = React.useState(false);
 
   let updateToken = (value) => {
     let auth = new BoxDeveloperTokenAuth({
@@ -33,6 +40,72 @@ function App() {
     }
     let entries = (await client.folders.getFolderItems(folderId)).entries;
     setItems(entries);
+    setCurrentFolder(folderId);
+  };
+
+  const handleUploadButtonClick = () => {
+    if (client === null) {
+      alert("Please enter a developer token");
+      return;
+    }
+    fileInputRef.current.click();
+  };
+
+  const handleFileUpload = async (event) => {
+    if (client === null) {
+      alert("Please enter a developer token");
+      return;
+    }
+    const file = event.target.files[0];
+    if (!file) {
+      alert("Error: No file selected");
+      return;
+    }
+
+    //check if the file is too large [more than 20MB] then use the chunked upload method.
+    if (file.size > 20 * 1024 * 1024) {
+      setUploading(true);
+      try {
+        const response = await client.chunkedUploads.uploadBigFile(
+          generateReadableStreamFromFile(file),
+          file.name,
+          file.size,
+          currentFolder
+        );
+        console.log("Uploaded file : ", response);
+        alert(`File successfully uploaded ${response.name}`);
+        getFiles(currentFolder);
+      } catch (error) {
+        console.error("Error uploading file: ", error);
+        alert(`Error uploading file: ${error.message || "Unknown error"}`);
+      } finally {
+        setUploading(false);
+      }
+    } else {
+      setUploading(true);
+      try {
+        // Prepare upload attributes
+        const attributes = {
+          name: file.name,
+          parent: { id: currentFolder },
+        };
+        // Upload using the SDK
+        const response = await client.uploads.uploadFile({
+          attributes: attributes,
+          file: generateReadableStreamFromFile(file),
+        });
+        const uploadedFile = response.entries[0];
+        console.log("Uploaded file :", uploadedFile);
+        alert(`File successfully uploaded ${uploadedFile.name}`);
+        // Refresh the file list after upload
+        getFiles(currentFolder);
+      } catch (error) {
+        console.error("Error uploading file: ", error);
+        alert(`Error uploading file: ${error.message || "Unknown error"}`);
+      } finally {
+        setUploading(false);
+      }
+    }
   };
 
   let downloadFile = async (fileId) => {
@@ -56,15 +129,41 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <TextField
-          label="Developer Token"
-          variant="outlined"
-          onChange={updateToken}
-        ></TextField>
-        <br />
-        <Button variant="contained" onClick={() => getFiles("0")}>
-          Get Root Folder
-        </Button>
+        <Typography variant="h4" gutterBottom>
+          Box File Manager
+        </Typography>
+        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
+          <TextField
+            label="Developer Token"
+            variant="outlined"
+            onChange={updateToken}
+            fullWidth
+          />
+        </Box>
+        <Box display="flex" justifyContent="center" mb={2}>
+          <Button
+            variant="contained"
+            size="small"
+            onClick={() => getFiles("0")}
+          >
+            Get Root Folder
+          </Button>
+          &nbsp;
+          <Button
+            variant="contained"
+            onClick={handleUploadButtonClick}
+            size="small"
+            disabled={uploading}
+          >
+            {uploading ? <CircularProgress size={24} /> : "Upload"}
+          </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            hidden
+            onChange={handleFileUpload}
+          />
+        </Box>
       </header>
       <Paper>
         <TableContainer component={Paper}>
@@ -83,17 +182,30 @@ function App() {
                   <TableCell>{item.id}</TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.type}</TableCell>
-                  
                   <TableCell>
                     {item.type === "file" ? (
-                      <button onClick={() => downloadFile(item.id)}>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        onClick={() => downloadFile(item.id)}
+                      >
                         Download
-                      </button>
+                      </Button>
                     ) : item.type === "folder" ? (
-                      <button onClick={() => getFiles(item.id)}>Open</button>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                        onClick={() => getFiles(item.id)}
+                      >
+                        Open
+                      </Button>
                     ) : item.type === "web_link" ? (
                       <a href={item.url} target="_blank" rel="noreferrer">
-                        <button>Open</button>
+                        <Button variant="contained" color="default">
+                          Open
+                        </Button>
                       </a>
                     ) : null}
                   </TableCell>
